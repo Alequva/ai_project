@@ -6,6 +6,7 @@ import bground from './assets/background.jpg';
 function App() {
   const [currentPage, setCurrentPage] = useState('upload');
   const [resultsData, setResultsData] = useState(null);
+  const [darkMode, setDarkMode] = useState(false);
 
   const navigateToResults = (data) => {
     setResultsData(data);
@@ -17,10 +18,21 @@ function App() {
     setResultsData(null);
   };
 
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+  };
+
   return (
     <>
       {currentPage === 'upload' && <UploadPage onNavigate={navigateToResults} />}
-      {currentPage === 'results' && <ResultsPage data={resultsData} onNavigate={navigateToUpload} />}
+      {currentPage === 'results' && (
+        <ResultsPage 
+          data={resultsData} 
+          onNavigate={navigateToUpload} 
+          darkMode={darkMode}
+          toggleDarkMode={toggleDarkMode}
+        />
+      )}
     </>
   );
 }
@@ -354,57 +366,33 @@ function UploadPage({ onNavigate }) {
 }
 
 // Results Page Component
-function ResultsPage({ data, onNavigate }) {
-  // Data is now an array of 5 results with different confidence levels
-  // Default to 0.8 confidence (index 3)
+// Results Page Component
+function ResultsPage({ data, onNavigate, darkMode, toggleDarkMode }) {
   const [selectedConfidence, setSelectedConfidence] = useState(0.8);
-  
-  // Find the currently selected result
   const currentResult = data.find(result => result.confidence === selectedConfidence);
   
+  const theme = {
+    bg: darkMode ? '#0f172a' : '#f9fafb',
+    cardBg: darkMode ? 'rgba(30, 41, 59, 0.7)' : 'rgba(255, 255, 255, 0.9)',
+    cardBgSolid: darkMode ? '#1e293b' : '#ffffff',
+    text: darkMode ? '#f1f5f9' : '#1f2937',
+    textSecondary: darkMode ? '#cbd5e1' : '#6b7280',
+    textMuted: darkMode ? '#94a3b8' : '#9ca3af',
+    border: darkMode ? 'rgba(71, 85, 105, 0.5)' : '#e5e7eb',
+    headerBg: darkMode ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+    accentBg: darkMode ? 'rgba(34, 197, 94, 0.1)' : '#dcfce7',
+    summaryBg: darkMode ? 'linear-gradient(to right, rgba(20, 83, 45, 0.3), rgba(21, 128, 61, 0.2))' : 'linear-gradient(to right, #f0fdf4, #d1fae5)',
+    summaryBorder: darkMode ? 'rgba(34, 197, 94, 0.3)' : '#bbf7d0',
+    infoBg: darkMode ? 'rgba(51, 65, 85, 0.5)' : '#f9fafb'
+  };
+  
   const stats = [
-    { 
-      label: 'Total Trees', 
-      value: currentResult.stats.total_trees, 
-      unit: 'trees', 
-      icon: '🌳', 
-      desc: 'All detected trees' 
-    },
-    { 
-      label: 'Individual Trees', 
-      value: currentResult.stats.tree_class, 
-      unit: 'trees', 
-      icon: '🌲', 
-      desc: 'Single tree class' 
-    },
-    { 
-      label: 'Tree Clusters', 
-      value: currentResult.stats.trees_class, 
-      unit: 'clusters', 
-      icon: '🌿', 
-      desc: 'Dense tree groups' 
-    },
-    { 
-      label: 'Trees in Clusters', 
-      value: currentResult.stats.trees_in_trees_cluster, 
-      unit: 'trees', 
-      icon: '🌴', 
-      desc: 'Trees within clusters' 
-    },
-    { 
-      label: 'Tree Density', 
-      value: currentResult.stats.density_trees, 
-      unit: 'trees/m²', 
-      icon: '📊', 
-      desc: 'Trees per square meter' 
-    },
-    { 
-      label: 'Green Coverage', 
-      value: currentResult.stats.green_coverage_m2, 
-      unit: 'm²', 
-      icon: '🍃', 
-      desc: 'Area covered by trees' 
-    }
+    { label: 'Total Trees', value: currentResult.stats.total_trees, unit: 'trees', icon: '🌳', desc: 'All detected trees' },
+    { label: 'Individual Trees', value: currentResult.stats.tree_class, unit: 'trees', icon: '🌲', desc: 'Single tree class' },
+    { label: 'Tree Clusters', value: currentResult.stats.trees_class, unit: 'clusters', icon: '🌿', desc: 'Dense tree groups' },
+    { label: 'Trees in Clusters', value: currentResult.stats.trees_in_trees_cluster, unit: 'trees', icon: '🌴', desc: 'Trees within clusters' },
+    { label: 'Tree Density', value: currentResult.stats.density_trees, unit: 'trees/m²', icon: '📊', desc: 'Trees per square meter' },
+    { label: 'Green Coverage', value: currentResult.stats.green_coverage_m2, unit: 'm²', icon: '🍃', desc: 'Area covered by trees' }
   ];
 
   const downloadImage = () => {
@@ -417,30 +405,45 @@ function ResultsPage({ data, onNavigate }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb' }}>
-      {/* Header */}
+    <div style={{ minHeight: '100vh', backgroundColor: theme.bg, transition: 'background-color 0.3s ease' }}>
       <header style={{
-        backgroundColor: 'white',
-        boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
-        borderBottom: '1px solid #e5e7eb',
+        backgroundColor: theme.headerBg,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        boxShadow: darkMode ? '0 1px 3px 0 rgba(0, 0, 0, 0.3)' : '0 1px 3px 0 rgba(0, 0, 0, 0.1)',
+        borderBottom: `1px solid ${theme.border}`,
         position: 'sticky',
         top: 0,
-        zIndex: 50
+        zIndex: 50,
+        transition: 'all 0.3s ease'
       }}>
-        <div style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '16px 20px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
-            <img src = {LogoGreen} alt="GreenVision" style={{ height: '40px', width: 'auto' }} />
-          </div>
-          <button
-            onClick={downloadImage}
-            style={{
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <img src={darkMode ? LogoWhite : LogoGreen} alt="GreenVision" style={{ height: '40px', width: 'auto', transition: 'opacity 0.3s ease' }} />
+          
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <button onClick={toggleDarkMode} style={{
+              backgroundColor: darkMode ? 'rgba(71, 85, 105, 0.5)' : 'rgba(229, 231, 235, 0.8)',
+              backdropFilter: 'blur(10px)',
+              border: 'none',
+              borderRadius: '8px',
+              padding: '8px 12px',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              transition: 'all 0.3s ease'
+            }}>
+              {darkMode ? (
+                <svg style={{ width: '20px', height: '20px', color: '#fbbf24' }} fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg style={{ width: '20px', height: '20px', color: '#64748b' }} fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                </svg>
+              )}
+            </button>
+            
+            <button onClick={downloadImage} style={{
               backgroundColor: '#22c55e',
               color: 'white',
               padding: '8px 16px',
@@ -449,168 +452,150 @@ function ResultsPage({ data, onNavigate }) {
               cursor: 'pointer',
               fontWeight: '500',
               display: 'flex',
-              alignItems: 'center'
-            }}
-          >
-            <svg style={{ width: '20px', height: '20px', marginRight: '8px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Download
-          </button>
+              alignItems: 'center',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 2px 8px rgba(34, 197, 94, 0.3)'
+            }}>
+              <svg style={{ width: '20px', height: '20px', marginRight: '8px' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              Download
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main style={{ maxWidth: '1280px', margin: '0 auto', padding: '32px 20px' }}>
-        {/* Title with Confidence Selector */}
         <div style={{ marginBottom: '32px' }}>
-          <h2 style={{ fontSize: '30px', fontWeight: 'bold', color: '#1f2937', margin: '0 0 16px 0' }}>Analysis Results</h2>
+          <h2 style={{ fontSize: '30px', fontWeight: 'bold', color: theme.text, margin: '0 0 16px 0', transition: 'color 0.3s ease' }}>
+            Analysis Results
+          </h2>
           
-          
-         {/* Statistics Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: '16px',
-          marginBottom: '32px'
-        }}>
-          {stats.map((stat, idx) => (
-            <div key={idx} style={{
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-              padding: '24px',
-              borderLeft: '4px solid #22c55e',
-              transition: 'transform 0.2s',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
-                <span style={{ fontSize: '32px' }}>{stat.icon}</span>
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{
-                    fontSize: '11px',
-                    color: '#9ca3af',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    display: 'block'
-                  }}>{stat.label}</span>
-                  <span style={{ fontSize: '11px', color: '#d1d5db' }}>{stat.desc}</span>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '32px' }}>
+            {stats.map((stat, idx) => (
+              <div key={idx} style={{
+                backgroundColor: theme.cardBg,
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                borderRadius: '12px',
+                boxShadow: darkMode ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                padding: '24px',
+                borderLeft: '4px solid #22c55e',
+                transition: 'all 0.3s ease',
+                border: `1px solid ${theme.border}`
+              }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <span style={{ fontSize: '32px' }}>{stat.icon}</span>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '11px', color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', transition: 'color 0.3s ease' }}>
+                      {stat.label}
+                    </span>
+                    <span style={{ fontSize: '11px', color: darkMode ? '#64748b' : '#d1d5db', transition: 'color 0.3s ease' }}>
+                      {stat.desc}
+                    </span>
+                  </div>
+                </div>
+                <div style={{ fontSize: '30px', fontWeight: 'bold', color: theme.text, transition: 'color 0.3s ease' }}>
+                  {stat.value}
+                  <span style={{ fontSize: '14px', color: theme.textMuted, marginLeft: '8px', transition: 'color 0.3s ease' }}>{stat.unit}</span>
                 </div>
               </div>
-              <div style={{ fontSize: '30px', fontWeight: 'bold', color: '#1f2937' }}>
-                {stat.value}
-                <span style={{ fontSize: '14px', color: '#9ca3af', marginLeft: '8px' }}>{stat.unit}</span>
-              </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
         
-        {/* Confidence Selector */}
           <div style={{ 
-            backgroundColor: 'white', 
+            backgroundColor: theme.cardBg,
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
             padding: '20px', 
             borderRadius: '12px', 
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            marginBottom: '16px'
+            boxShadow: darkMode ? '0 2px 4px rgba(0,0,0,0.3)' : '0 2px 4px rgba(0,0,0,0.1)',
+            marginBottom: '16px',
+            border: `1px solid ${theme.border}`,
+            transition: 'all 0.3s ease'
           }}>
-            <label style={{ 
-              fontSize: '14px', 
-              fontWeight: '600', 
-              color: '#374151', 
-              display: 'block', 
-              marginBottom: '12px' 
-            }}>
+            <label style={{ fontSize: '14px', fontWeight: '600', color: theme.text, display: 'block', marginBottom: '12px', transition: 'color 0.3s ease' }}>
               Detection Confidence
             </label>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
               {data.map((result) => (
-                <button
-                  key={result.confidence}
-                  onClick={() => setSelectedConfidence(result.confidence)}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    border: selectedConfidence === result.confidence ? '2px solid #22c55e' : '2px solid #e5e7eb',
-                    backgroundColor: selectedConfidence === result.confidence ? '#dcfce7' : 'white',
-                    color: selectedConfidence === result.confidence ? '#16a34a' : '#6b7280',
-                    fontWeight: selectedConfidence === result.confidence ? '600' : '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    fontSize: '14px'
-                  }}
-                >
+                <button key={result.confidence} onClick={() => setSelectedConfidence(result.confidence)} style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: selectedConfidence === result.confidence ? '2px solid #22c55e' : `2px solid ${theme.border}`,
+                  backgroundColor: selectedConfidence === result.confidence ? theme.accentBg : theme.cardBgSolid,
+                  color: selectedConfidence === result.confidence ? '#16a34a' : theme.textSecondary,
+                  fontWeight: selectedConfidence === result.confidence ? '600' : '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  fontSize: '14px'
+                }}>
                   {'>'}{(result.confidence * 100).toFixed(0)}%
                 </button>
               ))}
             </div>
-            <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '8px', margin: '8px 0 0 0' }}>
+            <p style={{ fontSize: '12px', color: theme.textSecondary, marginTop: '8px', margin: '8px 0 0 0', transition: 'color 0.3s ease' }}>
               💡 Lower confidence shows more detections (may include false positives). Higher confidence shows only high-certainty detections.
             </p>
           </div>
         </div>
 
-
-        {/* Image Display */}
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: theme.cardBg,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           borderRadius: '12px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          boxShadow: darkMode ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
           padding: '24px',
-          marginBottom: '32px'
+          marginBottom: '32px',
+          border: `1px solid ${theme.border}`,
+          transition: 'all 0.3s ease'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-            <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#1f2937', margin: 0 }}>
+            <h3 style={{ fontSize: '20px', fontWeight: '600', color: theme.text, margin: 0, transition: 'color 0.3s ease' }}>
               Annotated Image ({(selectedConfidence * 100).toFixed(0)}% Confidence)
             </h3>
-            <span style={{
-              fontSize: '14px',
-              backgroundColor: '#dcfce7',
-              color: '#16a34a',
-              padding: '4px 12px',
-              borderRadius: '9999px'
-            }}>✓ Analyzed</span>
+            <span style={{ fontSize: '14px', backgroundColor: theme.accentBg, color: '#16a34a', padding: '4px 12px', borderRadius: '9999px', transition: 'background-color 0.3s ease' }}>
+              ✓ Analyzed
+            </span>
           </div>
           
-          <div style={{ borderRadius: '8px', overflow: 'hidden', border: '2px solid #e5e7eb' }}>
-            <img 
-              src={currentResult.image} 
-              alt={`Annotated satellite view at ${selectedConfidence} confidence`}
-              style={{ width: '100%', height: 'auto', display: 'block' }} 
-            />
+          <div style={{ borderRadius: '8px', overflow: 'hidden', border: `2px solid ${theme.border}`, transition: 'border-color 0.3s ease' }}>
+            <img src={currentResult.image} alt={`Annotated satellite view at ${selectedConfidence} confidence`} style={{ width: '100%', height: 'auto', display: 'block' }} />
           </div>
           
-          <div style={{
-            marginTop: '16px',
-            padding: '16px',
-            backgroundColor: '#f9fafb',
-            borderRadius: '8px'
-          }}>
-            <p style={{ fontSize: '14px', color: '#374151', fontWeight: '500', marginBottom: '8px' }}>Detection Legend:</p>
+          <div style={{ marginTop: '16px', padding: '16px', backgroundColor: theme.infoBg, backdropFilter: 'blur(10px)', borderRadius: '8px', transition: 'background-color 0.3s ease' }}>
+            <p style={{ fontSize: '14px', color: theme.text, fontWeight: '500', marginBottom: '8px', transition: 'color 0.3s ease' }}>
+              Detection Legend:
+            </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <span style={{ width: '16px', height: '16px', backgroundColor: '#22c55e', borderRadius: '4px', marginRight: '8px' }}></span>
-                <span style={{ color: '#6b7280' }}>Individual trees</span>
+                <span style={{ color: theme.textSecondary, transition: 'color 0.3s ease' }}>Individual trees</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <span style={{ width: '16px', height: '16px', backgroundColor: '#eab308', borderRadius: '4px', marginRight: '8px' }}></span>
-                <span style={{ color: '#6b7280' }}>Tree clusters</span>
+                <span style={{ color: theme.textSecondary, transition: 'color 0.3s ease' }}>Tree clusters</span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Summary */}
         <div style={{
-          background: 'linear-gradient(to right, #f0fdf4, #d1fae5)',
+          background: theme.summaryBg,
+          backdropFilter: darkMode ? 'blur(20px)' : 'none',
+          WebkitBackdropFilter: darkMode ? 'blur(20px)' : 'none',
           borderRadius: '12px',
-          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          boxShadow: darkMode ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
           padding: '24px',
-          border: '1px solid #bbf7d0',
-          marginBottom: '32px'
+          border: `1px solid ${theme.summaryBorder}`,
+          marginBottom: '32px',
+          transition: 'all 0.3s ease'
         }}>
-          <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1f2937', marginBottom: '12px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '600', color: theme.text, marginBottom: '12px', transition: 'color 0.3s ease' }}>
             📋 Analysis Summary (Confidence: {(selectedConfidence * 100).toFixed(0)}%)
           </h3>
-          <div style={{ color: '#374151', lineHeight: '1.75' }}>
+          <div style={{ color: theme.text, lineHeight: '1.75', transition: 'color 0.3s ease' }}>
             <p style={{ margin: '8px 0' }}>• Detected <strong>{currentResult.stats.tree_class} individual trees</strong></p>
             <p style={{ margin: '8px 0' }}>• Identified <strong>{currentResult.stats.trees_class} tree clusters</strong> containing <strong>{currentResult.stats.trees_in_trees_cluster} trees</strong></p>
             <p style={{ margin: '8px 0' }}>• Total tree count: <strong>{currentResult.stats.total_trees} trees</strong></p>
@@ -619,41 +604,33 @@ function ResultsPage({ data, onNavigate }) {
           </div>
         </div>
 
-        {/* Action Button */}
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <button
-            onClick={onNavigate}
-            style={{
-              backgroundColor: '#16a34a',
-              color: 'white',
-              padding: '12px 32px',
-              borderRadius: '8px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: '600',
-              fontSize: '16px',
-              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-            }}
-          >
+          <button onClick={onNavigate} style={{
+            backgroundColor: '#16a34a',
+            color: 'white',
+            padding: '12px 32px',
+            borderRadius: '8px',
+            border: 'none',
+            cursor: 'pointer',
+            fontWeight: '600',
+            fontSize: '16px',
+            boxShadow: '0 4px 12px rgba(22, 163, 74, 0.4)',
+            transition: 'all 0.3s ease'
+          }}>
             Analyze Another Image
           </button>
         </div>
       </main>
 
-      {/* Footer */}
       <footer style={{
-        backgroundColor: 'white',
-        borderTop: '1px solid #e5e7eb',
-        marginTop: '64px'
+        backgroundColor: theme.headerBg,
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderTop: `1px solid ${theme.border}`,
+        marginTop: '64px',
+        transition: 'all 0.3s ease'
       }}>
-        <div style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          padding: '24px 20px',
-          textAlign: 'center',
-          color: '#6b7280',
-          fontSize: '14px'
-        }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '24px 20px', textAlign: 'center', color: theme.textSecondary, fontSize: '14px', transition: 'color 0.3s ease' }}>
           <p style={{ margin: 0 }}>GreenVision © 2025 • Powered by PyTorch & FastAPI</p>
         </div>
       </footer>
