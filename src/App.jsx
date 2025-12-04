@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import LogoGreen from './assets/icon_with_text_green.svg';
+import LogoGreen from './assets/icon_green.svg';
+import LogoWhite from './assets/icon_white.svg';
+import bground from './assets/background.jpg';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('upload');
@@ -23,6 +25,7 @@ function App() {
   );
 }
 
+// Upload Page Component
 // Upload Page Component
 function UploadPage({ onNavigate }) {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -57,12 +60,10 @@ function UploadPage({ onNavigate }) {
     setIsAnalyzing(true);
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    // Mock data matching the new backend format
-    // Backend will return array of 5 confidence levels: [0.2, 0.4, 0.6, 0.8, 0.95]
     const mockResults = [
       {
         confidence: 0.2,
-        image: preview, // In reality: base64 string from backend
+        image: preview,
         stats: {
           total_trees: Math.floor(Math.random() * 200) + 150,
           tree_class: Math.floor(Math.random() * 120) + 80,
@@ -129,42 +130,64 @@ function UploadPage({ onNavigate }) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f766e 0%, #059669 50%, #10b981 100%)',
+      // backgroundImage: 'url("https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=3432&auto=format&fit=crop")',
+      backgroundImage: `url(${bground})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+      backgroundRepeat: 'no-repeat',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px'
+      padding: '20px',
+      position: 'relative'
     }}>
+      {/* Dark overlay */}
       <div style={{
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
-        backdropFilter: 'blur(10px)',
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        zIndex: 1
+      }} />
+      
+      {/* Glassmorphism Card */}
+      <div style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
         borderRadius: '24px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+        boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.3)',
+        border: '1px solid rgba(255, 255, 255, 0.18)',
         padding: '40px',
         width: '100%',
-        maxWidth: '480px'
+        maxWidth: '480px',
+        position: 'relative',
+        zIndex: 2
       }}>
         {/* Logo and Title */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
-            <img src={LogoGreen} alt="GreenVision" style={{ height: '60px', width: 'auto' }} />
+            <img src={LogoGreen} alt="GreenVision" style={{ height: '60px', width: 'auto', filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.3))' }} />
           </div>
-          <p style={{ color: '#6b7280', margin: 0 }}>AI-Powered Tree Detection from Satellite Images</p>
+          <p style={{ color: 'rgba(255, 255, 255, 0.95)', margin: 0, textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)', fontWeight: '500', fontSize: '15px' }}>AI-Powered Tree Detection from Satellite Images</p>
         </div>
 
         {/* Upload Area */}
         <div
           style={{
-            border: isDragging ? '4px dashed #22c55e' : '4px dashed #d1d5db',
-            backgroundColor: isDragging ? '#f0fdf4' : 'transparent',
-            borderRadius: '12px',
+            border: isDragging ? '3px dashed rgba(34, 197, 94, 0.8)' : '3px dashed rgba(255, 255, 255, 0.3)',
+            backgroundColor: isDragging ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255, 255, 255, 0.1)',
+            borderRadius: '16px',
             padding: '32px',
             textAlign: 'center',
             minHeight: '280px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
-            transition: 'all 0.3s'
+            transition: 'all 0.3s ease',
+            backdropFilter: 'blur(10px)'
           }}
           onDrop={handleDrop}
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -172,17 +195,41 @@ function UploadPage({ onNavigate }) {
         >
           {preview ? (
             <div>
-              <img src={preview} alt="Preview" style={{ maxHeight: '192px', margin: '0 auto', borderRadius: '8px', marginBottom: '16px' }} />
-              <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '8px' }}>{selectedFile.name}</p>
+              <img 
+                src={preview} 
+                alt="Preview" 
+                style={{ 
+                  maxHeight: '192px', 
+                  maxWidth: '100%',
+                  margin: '0 auto', 
+                  borderRadius: '12px', 
+                  marginBottom: '16px', 
+                  boxShadow: '0 8px 16px rgba(0, 0, 0, 0.4)',
+                  border: '2px solid rgba(255, 255, 255, 0.2)'
+                }} 
+              />
+              <p style={{ 
+                fontSize: '14px', 
+                color: 'rgba(255, 255, 255, 0.95)', 
+                marginBottom: '8px', 
+                fontWeight: '500',
+                textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)'
+              }}>
+                {selectedFile.name}
+              </p>
               <button
                 onClick={() => { setSelectedFile(null); setPreview(null); }}
                 style={{
-                  color: '#ef4444',
+                  color: '#ff6b6b',
                   fontSize: '14px',
-                  fontWeight: '500',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer'
+                  fontWeight: '600',
+                  background: 'rgba(255, 107, 107, 0.1)',
+                  border: '1px solid rgba(255, 107, 107, 0.3)',
+                  padding: '6px 16px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)',
+                  transition: 'all 0.2s'
                 }}
               >
                 Remove
@@ -191,21 +238,49 @@ function UploadPage({ onNavigate }) {
           ) : (
             <>
               <div style={{ width: '64px', height: '64px', margin: '0 auto 16px' }}>
-                <svg style={{ width: '100%', height: '100%', color: '#9ca3af' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    color: 'rgba(255, 255, 255, 0.85)', 
+                    filter: 'drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3))' 
+                  }} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                 </svg>
               </div>
-              <p style={{ color: '#374151', marginBottom: '8px', fontWeight: '500' }}>Drag & drop your satellite image</p>
-              <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '16px' }}>or</p>
+              <p style={{ 
+                color: 'rgba(255, 255, 255, 0.95)', 
+                marginBottom: '8px', 
+                fontWeight: '600', 
+                textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+                fontSize: '16px'
+              }}>
+                Drag & drop your satellite image
+              </p>
+              <p style={{ 
+                fontSize: '14px', 
+                color: 'rgba(255, 255, 255, 0.8)', 
+                marginBottom: '16px',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+              }}>
+                or
+              </p>
               <label style={{ cursor: 'pointer' }}>
                 <span style={{
-                  backgroundColor: '#22c55e',
+                  backgroundColor: 'rgba(34, 197, 94, 0.9)',
                   color: 'white',
-                  padding: '10px 24px',
-                  borderRadius: '8px',
+                  padding: '12px 28px',
+                  borderRadius: '12px',
                   display: 'inline-block',
-                  fontWeight: '500',
-                  transition: 'background-color 0.3s'
+                  fontWeight: '600',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 4px 12px rgba(34, 197, 94, 0.5)',
+                  border: '1px solid rgba(255, 255, 255, 0.2)',
+                  fontSize: '15px'
                 }}>
                   Browse Files
                 </span>
@@ -216,7 +291,14 @@ function UploadPage({ onNavigate }) {
                   onChange={(e) => handleFileSelect(e.target.files[0])}
                 />
               </label>
-              <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '12px' }}>JPG or PNG • Max 10MB</p>
+              <p style={{ 
+                fontSize: '12px', 
+                color: 'rgba(255, 255, 255, 0.7)', 
+                marginTop: '12px',
+                textShadow: '0 1px 2px rgba(0, 0, 0, 0.3)'
+              }}>
+                JPG or PNG • Max 10MB
+              </p>
             </>
           )}
         </div>
@@ -228,25 +310,43 @@ function UploadPage({ onNavigate }) {
           style={{
             width: '100%',
             marginTop: '24px',
-            padding: '12px',
-            borderRadius: '8px',
+            padding: '14px',
+            borderRadius: '12px',
             fontWeight: '600',
             fontSize: '16px',
-            border: 'none',
+            border: selectedFile && !isAnalyzing ? '1px solid rgba(255, 255, 255, 0.2)' : 'none',
             cursor: selectedFile && !isAnalyzing ? 'pointer' : 'not-allowed',
-            backgroundColor: selectedFile && !isAnalyzing ? '#16a34a' : '#d1d5db',
-            color: selectedFile && !isAnalyzing ? 'white' : '#9ca3af',
-            boxShadow: selectedFile && !isAnalyzing ? '0 10px 15px -3px rgba(0, 0, 0, 0.1)' : 'none',
-            transition: 'all 0.3s'
+            backgroundColor: selectedFile && !isAnalyzing ? 'rgba(22, 163, 74, 0.9)' : 'rgba(255, 255, 255, 0.2)',
+            color: selectedFile && !isAnalyzing ? 'white' : 'rgba(255, 255, 255, 0.5)',
+            boxShadow: selectedFile && !isAnalyzing ? '0 8px 16px rgba(22, 163, 74, 0.5)' : 'none',
+            transition: 'all 0.3s ease',
+            backdropFilter: 'blur(10px)'
           }}
         >
-          {isAnalyzing ? 'Analyzing...' : 'Analyze Image'}
+          {isAnalyzing ? '🔄 Analyzing...' : '✨ Analyze Image'}
         </button>
 
         {/* Info */}
-        <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '14px', color: '#6b7280' }}>
-          <p style={{ margin: '4px 0' }}>📍 Optimal altitude: 220-270 meters</p>
-          <p style={{ margin: '4px 0' }}>🛰️ Source: Google Earth Pro</p>
+        <div style={{ 
+          marginTop: '24px', 
+          textAlign: 'center', 
+          fontSize: '14px', 
+          color: 'rgba(255, 255, 255, 0.85)'
+        }}>
+          <p style={{ 
+            margin: '4px 0', 
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+            fontWeight: '500'
+          }}>
+            📍 Optimal altitude: 220-270 meters
+          </p>
+          <p style={{ 
+            margin: '4px 0', 
+            textShadow: '0 2px 4px rgba(0, 0, 0, 0.3)',
+            fontWeight: '500'
+          }}>
+            🛰️ Source: Google Earth Pro
+          </p>
         </div>
       </div>
     </div>
@@ -419,7 +519,7 @@ function ResultsPage({ data, onNavigate }) {
               display: 'block', 
               marginBottom: '12px' 
             }}>
-              Detection Confidence Threshold
+              Detection Confidence
             </label>
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
               {data.map((result) => (
@@ -438,7 +538,7 @@ function ResultsPage({ data, onNavigate }) {
                     fontSize: '14px'
                   }}
                 >
-                  {(result.confidence * 100).toFixed(0)}%
+                  {'>'}{(result.confidence * 100).toFixed(0)}%
                 </button>
               ))}
             </div>
