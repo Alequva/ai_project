@@ -73,7 +73,7 @@ function UploadPage({ onNavigate }) {
       const formData = new FormData();
       formData.append('image', selectedFile);
 
-      const response = await fetch('/api/predict', {
+      const response = await fetch('http://localhost:8000/api/predict', {
         method: 'POST',
         body: formData
       });
