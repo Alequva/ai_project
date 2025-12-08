@@ -322,10 +322,10 @@ function ResultsPage({ data, onNavigate, darkMode, toggleDarkMode }) {
     border: darkMode ? 'rgba(71, 85, 105, 0.5)' : '#e5e7eb',
     headerBg: darkMode ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
     accentBg: darkMode ? 'rgba(34, 197, 94, 0.1)' : '#dcfce7',
-    summaryBg: darkMode 
-      ? 'linear-gradient(to right, rgba(20, 83, 45, 0.3), rgba(21, 128, 61, 0.2))' 
-      : 'linear-gradient(to right, #f0fdf4, #d1fae5)',
+    summaryBg: darkMode ? 'rgba(21, 128, 61, 0.2' : '#d1fae5',
     summaryBorder: darkMode ? 'rgba(34, 197, 94, 0.3)' : '#bbf7d0',
+    modelBg: darkMode ? 'rgba(146, 64, 14, 0.2' : '#faecd1ff',
+    modelBorder: darkMode ? 'rgba(251, 146, 60, 0.3)' : '#f7d8bbff',
     infoBg: darkMode ? 'rgba(51, 65, 85, 0.5)' : '#f9fafb'
   };
 
@@ -578,6 +578,36 @@ function ResultsPage({ data, onNavigate, darkMode, toggleDarkMode }) {
             </p>
             <p style={{ margin: '8px 0' }}>
               Tree density: <strong>{currentResult?.stats.densitytrees} trees/m²</strong>
+            </p>
+          </div>
+        </div>
+
+        <div style={{
+          background: theme.modelBg,
+          backdropFilter: darkMode ? 'blur(20px)' : 'none',
+          WebkitBackdropFilter: darkMode ? 'blur(20px)' : 'none',
+          borderRadius: '12px',
+          boxShadow: darkMode ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+          padding: '24px',
+          border: `1px solid ${theme.modelBorder}`,
+          marginBottom: '32px',
+          transition: 'all 0.3s ease'
+        }}>
+          <h3 style={{ fontSize: '18px', fontWeight: 600, color: theme.text, marginBottom: '12px', transition: 'color 0.3s ease' }}>
+            Model Information
+          </h3>
+          <div style={{ color: theme.text, lineHeight: '1.75', transition: 'color 0.3s ease' }}>
+            <p style={{ margin: '8px 0' }}>
+              Model Name: <strong>U1</strong>
+            </p>
+            <p style={{ margin: '8px 0' }}>
+              Model Type: <strong>Faster R-CNN</strong>
+            </p>
+            <p style={{ margin: '8px 0' }}>
+              Backboned: <strong>ResNet50</strong>
+            </p>
+            <p style={{ margin: '8px 0' }}>
+              Number of Parameters: <strong>43,035,934</strong>
             </p>
           </div>
         </div>
