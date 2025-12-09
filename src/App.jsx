@@ -70,33 +70,44 @@ function UploadPage({ onNavigate }) {
     setIsAnalyzing(true);
 
     try {
-      const formData = new FormData();
-      formData.append('image', selectedFile);
+    const formData = new FormData();
+    formData.append('image', selectedFile);
 
-      const response = await fetch('http://localhost:8000/api/predict', {
-        method: 'POST',
-        body: formData
-      });
+    const response = await fetch('http://localhost:8000/api/predict/', {
+      method: 'POST',
+      body: formData,
+    });
 
-      if (!response.ok) {
-        const text = await response.text();
-        alert(`Prediction failed: ${text}`);
-        return;
+    if (!response.ok) {
+      const contentType = response.headers.get('content-type');
+      let errorText;
+      
+      if (contentType && contentType.includes('application/json')) {
+        const errorData = await response.json();
+        errorText = JSON.stringify(errorData, null, 2);
+      } else {
+        errorText = await response.text();
       }
-
-      const data = await response.json();
-      onNavigate(data.results);
-    } catch (error) {
-      alert(`Error: ${error.message}`);
-    } finally {
-      setIsAnalyzing(false);
+      
+      alert(`Server Error (${response.status} ${response.statusText}):\n\n${errorText}`);
+      return;
     }
+
+    const data = await response.json();
+    onNavigate(data.results);
+    
+  } catch (error) {
+    alert(`Request Failed:\n\nError Type: ${error.name}\nMessage: ${error.message}\n\nCheck browser console (F12) for details.`);
+    console.error('Full error object:', error);
+  } finally {
+    setIsAnalyzing(false);
+  }
   };
 
   return (
     <div style={{
       minHeight: '100vh',
-      backgroundImage: `url(https://images.unsplash.com/photo-1511497584788-876760111969?q=80&w=3432&auto=format&fit=crop), url(${bground})`,
+      backgroundImage: `url(${bground})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
       backgroundRepeat: 'no-repeat',
@@ -309,8 +320,25 @@ function UploadPage({ onNavigate }) {
 
 // Results Page Component
 function ResultsPage({ data, onNavigate, darkMode, toggleDarkMode }) {
-  const [selectedConfidence, setSelectedConfidence] = useState(0.8);
+  const [selectedConfidence, setSelectedConfidence] = useState(data?.[0]?.confidence || 0.8);
   const currentResult = data?.find(result => result.confidence == selectedConfidence);
+
+  // Add this debugging
+  console.log('Results data:', data);
+  console.log('Selected confidence:', selectedConfidence);
+  console.log('Current result:', currentResult);
+  console.log('Current stats:', currentResult?.stats);
+
+  if (!data || data.length === 0) {
+    return (
+      <div style={{ minHeight: '100vh', backgroundColor: theme.bg, padding: '40px', textAlign: 'center' }}>
+        <h2 style={{ color: theme.text }}>No results available</h2>
+        <button onClick={onNavigate} style={{ marginTop: '20px', padding: '12px 24px', backgroundColor: '#22c55e', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}>
+          Go Back
+        </button>
+      </div>
+    );
+  }
 
   const theme = {
     bg: darkMode ? '#0f172a' : '#f9fafb',
@@ -322,30 +350,33 @@ function ResultsPage({ data, onNavigate, darkMode, toggleDarkMode }) {
     border: darkMode ? 'rgba(71, 85, 105, 0.5)' : '#e5e7eb',
     headerBg: darkMode ? 'rgba(15, 23, 42, 0.95)' : 'rgba(255, 255, 255, 0.95)',
     accentBg: darkMode ? 'rgba(34, 197, 94, 0.1)' : '#dcfce7',
-    summaryBg: darkMode ? 'rgba(21, 128, 61, 0.2' : '#d1fae5',
-    summaryBorder: darkMode ? 'rgba(34, 197, 94, 0.3)' : '#bbf7d0',
-    modelBg: darkMode ? 'rgba(146, 64, 14, 0.2' : '#faecd1ff',
-    modelBorder: darkMode ? 'rgba(251, 146, 60, 0.3)' : '#f7d8bbff',
+    modelBg: darkMode ? 'rgba(21, 128, 61, 0.2' : '#d1fae5',
+    modelBorder: darkMode ? 'rgba(34, 197, 94, 0.3)' : '#bbf7d0',
     infoBg: darkMode ? 'rgba(51, 65, 85, 0.5)' : '#f9fafb'
   };
 
   const stats = [
-    { label: 'Total Trees', value: currentResult?.stats.totaltrees, unit: 'trees', icon: '🌳', desc: 'All detected trees' },
-    { label: 'Individual Trees', value: currentResult?.stats.treeclass, unit: 'trees', icon: '🌲', desc: 'Single tree class' },
-    { label: 'Tree Clusters', value: currentResult?.stats.treesclass, unit: 'clusters', icon: '🌳🌳', desc: 'Dense tree groups' },
-    { label: 'Trees in Clusters', value: currentResult?.stats.treesintreescluster, unit: 'trees', icon: '🌲🌲', desc: 'Trees within clusters' },
-    { label: 'Tree Density', value: currentResult?.stats.densitytrees, unit: 'trees/m²', icon: '📏', desc: 'Trees per square meter' },
-    { label: 'Green Coverage', value: currentResult?.stats.greencoveragem2, unit: 'm²', icon: '🟢', desc: 'Area covered by trees' }
+    { label: 'Total Trees', value: currentResult?.stats?.total_trees ?? 'N/A', unit: 'trees', icon: '🌳', desc: 'All detected trees' },
+    { label: 'Individual Trees', value: currentResult?.stats?.tree_class ?? 'N/A', unit: 'trees', icon: '🌲', desc: 'Single tree class' },
+    { label: 'Tree Clusters', value: currentResult?.stats?.trees_class ?? 'N/A', unit: 'clusters', icon: '🌳🌳', desc: 'Dense tree groups' },
+    { label: 'Trees in Clusters', value: currentResult?.stats?.trees_in_trees_cluster ?? 'N/A', unit: 'trees', icon: '🌲🌲', desc: 'Trees within clusters' },
+    { label: 'Tree Density', value: currentResult?.stats?.density_trees ?? 'N/A', unit: 'trees/m²', icon: '📊', desc: 'Trees per square meter' },
+    { label: 'Green Coverage', value: currentResult?.stats?.green_coverage_m2 ?? 'N/A', unit: 'm²', icon: '🟢', desc: 'Area covered by trees' }
   ];
 
   const downloadImage = () => {
     const link = document.createElement('a');
-    link.href = currentResult.image;
+    const imageData = currentResult.image?.startsWith('data:') || currentResult.image?.startsWith('http')
+      ? currentResult.image
+      : `data:image/jpeg;base64,${currentResult.image}`;
+    
+    link.href = imageData;
     link.download = `greenvision-conf${selectedConfidence * 100}-${Date.now()}.jpg`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
+
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: theme.bg, transition: 'background-color 0.3s ease' }}>
@@ -520,7 +551,9 @@ function ResultsPage({ data, onNavigate, darkMode, toggleDarkMode }) {
           </div>
           <div style={{ borderRadius: '8px', overflow: 'hidden', border: `2px solid ${theme.border}`, transition: 'border-color 0.3s ease' }}>
             <img
-              src={currentResult?.image}
+              src={currentResult?.image?.startsWith('data:') || currentResult?.image?.startsWith('http') 
+                ? currentResult.image 
+                : `data:image/jpeg;base64,${currentResult?.image}`}
               alt="Annotated satellite view"
               style={{ width: '100%', height: 'auto', display: 'block' }}
             />
@@ -538,47 +571,14 @@ function ResultsPage({ data, onNavigate, darkMode, toggleDarkMode }) {
             </p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '14px' }}>
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ width: '16px', height: '16px', backgroundColor: '#22c55e', borderRadius: '4px', marginRight: '8px' }} />
+                <span style={{ width: '16px', height: '16px', backgroundColor: '#0400ffff', borderRadius: '4px', marginRight: '8px' }} />
                 <span style={{ color: theme.textSecondary, transition: 'color 0.3s ease' }}>Individual trees</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center' }}>
-                <span style={{ width: '16px', height: '16px', backgroundColor: '#eab308', borderRadius: '4px', marginRight: '8px' }} />
+                <span style={{ width: '16px', height: '16px', backgroundColor: '#ff0000ff', borderRadius: '4px', marginRight: '8px' }} />
                 <span style={{ color: theme.textSecondary, transition: 'color 0.3s ease' }}>Tree clusters</span>
               </div>
             </div>
-          </div>
-        </div>
-
-        <div style={{
-          background: theme.summaryBg,
-          backdropFilter: darkMode ? 'blur(20px)' : 'none',
-          WebkitBackdropFilter: darkMode ? 'blur(20px)' : 'none',
-          borderRadius: '12px',
-          boxShadow: darkMode ? '0 4px 6px -1px rgba(0, 0, 0, 0.3)' : '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-          padding: '24px',
-          border: `1px solid ${theme.summaryBorder}`,
-          marginBottom: '32px',
-          transition: 'all 0.3s ease'
-        }}>
-          <h3 style={{ fontSize: '18px', fontWeight: 600, color: theme.text, marginBottom: '12px', transition: 'color 0.3s ease' }}>
-            Analysis Summary (Confidence: {(selectedConfidence * 100).toFixed(0)}%)
-          </h3>
-          <div style={{ color: theme.text, lineHeight: '1.75', transition: 'color 0.3s ease' }}>
-            <p style={{ margin: '8px 0' }}>
-              Detected <strong>{currentResult?.stats.treeclass} individual trees</strong>
-            </p>
-            <p style={{ margin: '8px 0' }}>
-              Identified <strong>{currentResult?.stats.treesclass} tree clusters</strong> containing <strong>{currentResult?.stats.treesintreescluster} trees</strong>
-            </p>
-            <p style={{ margin: '8px 0' }}>
-              Total tree count: <strong>{currentResult?.stats.totaltrees} trees</strong>
-            </p>
-            <p style={{ margin: '8px 0' }}>
-              Green coverage: <strong>{currentResult?.stats.greencoveragem2} m²</strong>
-            </p>
-            <p style={{ margin: '8px 0' }}>
-              Tree density: <strong>{currentResult?.stats.densitytrees} trees/m²</strong>
-            </p>
           </div>
         </div>
 
