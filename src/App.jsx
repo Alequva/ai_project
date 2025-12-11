@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import LogoGreen from './assets/icon_green.svg';
 import LogoWhite from './assets/icon_white.svg';
 import bground from './assets/background.jpg';
+const URL = 'http://10.88.39.74:8000'; 
 
 function App() {
   const [currentPage, setCurrentPage] = useState('upload');
@@ -73,7 +74,7 @@ function UploadPage({ onNavigate }) {
     const formData = new FormData();
     formData.append('image', selectedFile);
 
-    const response = await fetch('http://localhost:8000/api/predict/', {
+    const response = await fetch(`${URL}/api/predict/`, {
       method: 'POST',
       body: formData,
     });
